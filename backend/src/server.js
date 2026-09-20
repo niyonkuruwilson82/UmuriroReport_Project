@@ -15,6 +15,7 @@ app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+app.get('/health', (_, res) => res.status(200).json({ status: 'ok' }));
 app.get('/api/health', (_,res) => res.json({message:'UmuriroReport API is running'}));
 app.use('/api/auth', authRoutes);
 app.use('/api/faults', faultRoutes);
@@ -24,4 +25,4 @@ app.use((err,req,res,next) => {
   res.status(500).json({message:'Server error'});
 });
 
-app.listen(PORT, () => console.log(`UmuriroReport backend running on http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`UmuriroReport backend running on http://0.0.0.0:${PORT}`));

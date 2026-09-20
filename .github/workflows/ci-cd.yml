@@ -48,11 +48,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Keep this step only if "lint" exists in package.json.
-      - name: Lint frontend
-        run: npm run lint
+      # No lint script in frontend/package.json — do not add a lint step.
 
       - name: Build frontend
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: npm run build
 
 
@@ -81,18 +81,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Keep this step only if "lint" exists in package.json.
-      - name: Lint backend
-        run: npm run lint
-
-      # Keep this step only if real tests exist.
-      - name: Test backend
-        run: npm test
-
-      # If this is a TypeScript backend, keep this.
-      # If JavaScript requires no compilation, remove it.
-      - name: Build backend
-        run: npm run build
+      # JavaScript backend — no lint, test, or build scripts in package.json.
+      # Verify the production entry point can be loaded without starting the server.
+      - name: Verify backend entry point
+        run: node --check src/server.js
 
 
   # =====================================================
