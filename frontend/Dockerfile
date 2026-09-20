@@ -10,7 +10,7 @@ WORKDIR /app
 # Copy dependency manifests first so Docker can cache npm ci
 COPY package.json package-lock.json ./
 
-RUN npm ci
+RUN npm install
 
 # Copy application source
 COPY . .

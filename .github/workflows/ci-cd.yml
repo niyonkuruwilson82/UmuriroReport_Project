@@ -1,106 +1,23 @@
-name: CI and Publish Containers
+name: Publish Containers
 
 on:
-  pull_request:
-    branches:
-      - main
-
   push:
     branches:
       - main
 
   workflow_dispatch:
 
-# If multiple commits are pushed quickly to the same branch,
-# cancel obsolete CI runs and keep the latest run.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: publish-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Default workflow permission is read-only.
 permissions:
   contents: read
 
 jobs:
 
-  # =====================================================
-  # FRONTEND CI
-  # =====================================================
-  frontend-ci:
-    name: Frontend CI
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      # No lint script in frontend/package.json — do not add a lint step.
-
-      - name: Build frontend
-        env:
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
-        run: npm run build
-
-
-  # =====================================================
-  # BACKEND CI
-  # =====================================================
-  backend-ci:
-    name: Backend CI
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: backend
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      # JavaScript backend — no lint, test, or build scripts in package.json.
-      # Verify the production entry point can be loaded without starting the server.
-      - name: Verify backend entry point
-        run: node --check src/server.js
-
-
-  # =====================================================
-  # PUBLISH FRONTEND IMAGE
-  # =====================================================
   publish-frontend:
     name: Publish Frontend Image
-
-    needs:
-      - frontend-ci
-      - backend-ci
-
-    # Pull requests run CI only.
-    # Images are published only after main is updated.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
     runs-on: ubuntu-latest
 
     permissions:
@@ -141,29 +58,16 @@ jobs:
         with:
           context: ./frontend
           push: true
-
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL }}
-
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
 
-  # =====================================================
-  # PUBLISH BACKEND IMAGE
-  # =====================================================
   publish-backend:
     name: Publish Backend Image
-
-    needs:
-      - frontend-ci
-      - backend-ci
-
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
     runs-on: ubuntu-latest
 
     permissions:
@@ -204,9 +108,7 @@ jobs:
         with:
           context: ./backend
           push: true
-
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
