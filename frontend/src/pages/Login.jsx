@@ -9,5 +9,7 @@ export default function Login(){
  <label>Email<input type="email" required value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label>
  <label>Password<input type="password" required value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/></label>
  <button className="btn">Login</button><p>No account? <Link to="/register">Register</Link></p>
- <small>Demo admin: admin@umuriro.rw / Admin@123</small></form></div>
+{/*<small>Demo admin: admin@umuriro.rw / Admin@123</small>*/}
+
+</form></div>
 }
